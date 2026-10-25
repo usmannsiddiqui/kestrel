@@ -1,4 +1,16 @@
-# Current handoff — judges-deck
+# Current handoff — fix-contact-leak
+
+Branch `fix-contact-leak` (from `main`), PR #29. PRs #21–#24 are merged into `main`.
+
+Done: `DuckSim.audit()` now frees MuJoCo's `data.contact` copy, which leaked ~2 MB/s of wasm memory until the tab aborted at the 2 GB cap. See `07-changelog.md`.
+
+Rule for MuJoCo bindings: any value with a `.delete()` method (an embind object returned by value) must be freed by JS; typed-array views such as `data.xpos` need nothing.
+
+Next: merge PR #29 and redeploy, so a demo tab can stay open through judging.
+
+---
+
+# Previous handoff — judges-deck
 
 Branch `judges-deck`, PR #24 to `main`. PRs #21–#23 are merged into `main`.
 

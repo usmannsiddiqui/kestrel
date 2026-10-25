@@ -416,3 +416,10 @@ Omitted-start fix verified: regression failed before fix, then pnpm check passed
 
 - Merged `main` `0c84d01` into `feat/beam-xp-levels`. The only conflict was this changelog (the README entry and the beam-XP entry both appended); both entries are kept.
 - README: the beam objective counts within 1.5° of level for 1 s, the fix-it hint, levels (Level 2 at 100 XP, Level 3 at 250), and the 1.5° tolerance named as an idealisation.
+
+## 2026-10-25 · Claude Code · Fix the MuJoCo contact-list memory leak
+
+- A demo tab crashed with `Cannot enlarge memory … limit is 2147483648 bytes` and `Aborted(native code called abort())` from `audit()` → `controlStep()`.
+- Cause: `data.contact` returns a fresh C++ copy of the whole contact list on every read (an embind object with `.delete()`); `audit()` read it every substep and never freed it. Measured in the browser: 50,000 reads without `.delete()` grew the wasm heap 722 MB, with `.delete()` 0 MB; the running sim grew ~28 MB per 15 s (2 GB in about 17 minutes). `data.xpos` (a typed-array view) and `model.opt.timestep` did not grow it.
+- Fix (`apps/web/src/simulation/duckSim.ts`): the audit loop runs in `try { … } finally { contacts.delete(); }`. After the fix the heap stayed at 56.9 MB over 30 s of sim with 24 contacts.
+- Checks: `pnpm typecheck` pass; `pnpm test` 221/221.
